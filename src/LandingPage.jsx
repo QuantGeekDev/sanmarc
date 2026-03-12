@@ -10,7 +10,6 @@ const SERVICES = [
     icon: "🏠",
     description: "Cocinas, baños, suelos, techos — transformamos tu hogar con acabados de primera calidad.",
     features: ["Reformas de cocinas", "Reformas de baños", "Suelos y revestimientos", "Reformas integrales"],
-    price: "Presupuesto gratis",
     accent: "#D4652B",
   },
   {
@@ -19,25 +18,221 @@ const SERVICES = [
     icon: "🔧",
     description: "Fugas, atascos, instalaciones — respuesta rápida y soluciones duraderas para tu hogar.",
     features: ["Detección de fugas", "Instalación de tuberías", "Desatascos", "Mantenimiento de calderas"],
-    price: "Presupuesto gratis",
     accent: "#2B7DD4",
   },
   {
-    id: "ascensores",
-    title: "Reparación de Ascensores",
-    icon: "⬆️",
-    description: "Mantenimiento, modernización y reparación de urgencia — técnicos certificados y fiables.",
-    features: ["Urgencias 24h", "Mantenimiento preventivo", "Modernización", "Inspecciones de seguridad"],
-    price: "Presupuesto gratis",
+    id: "electricidad",
+    title: "Electricidad",
+    icon: "⚡",
+    description: "Averías, instalaciones, cuadros eléctricos — electricistas autorizados a tu servicio.",
+    features: ["Averías eléctricas", "Instalaciones nuevas", "Cuadros y boletines", "Iluminación LED"],
     accent: "#D4A22B",
+  },
+  {
+    id: "mantenimiento",
+    title: "Mantenimiento del Hogar",
+    icon: "🛠️",
+    description: "Pintura, carpintería, montajes y pequeñas reparaciones — tu hogar siempre a punto.",
+    features: ["Pintura interior y exterior", "Carpintería y puertas", "Montaje de muebles", "Reparaciones generales"],
+    accent: "#2BD49A",
   },
 ];
 
 const TESTIMONIALS = [
   { name: "María G.", text: "Nos reformaron toda la cocina en tiempo récord. Un equipo increíble y muy profesional.", rating: 5 },
-  { name: "Tomás R.", text: "El ascensor de nuestra comunidad llevaba meses sin funcionar. Lo repararon y modernizaron en una semana.", rating: 5 },
+  { name: "Tomás R.", text: "Tuvimos un problema eléctrico urgente y vinieron en menos de una hora. Servicio impecable.", rating: 5 },
   { name: "Elena P.", text: "Profesionales, puntuales y el precio fue exactamente el presupuestado. Sin sorpresas.", rating: 5 },
+  { name: "Jordi M.", text: "Les encargamos el mantenimiento integral de nuestra comunidad. Siempre cumplen y a buen precio.", rating: 5 },
 ];
+
+const DAYS_ES = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
+const MONTHS_ES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+
+const TIME_SLOTS = ["09:00", "10:00", "11:00", "12:00", "13:00", "16:00", "17:00", "18:00", "19:00"];
+
+function CalendarPicker({ selectedDate, onSelectDate, selectedTime, onSelectTime }) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const [viewMonth, setViewMonth] = useState(today.getMonth());
+  const [viewYear, setViewYear] = useState(today.getFullYear());
+
+  const firstDay = new Date(viewYear, viewMonth, 1);
+  let startDow = firstDay.getDay() - 1;
+  if (startDow < 0) startDow = 6;
+  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+
+  const cells = [];
+  for (let i = 0; i < startDow; i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+
+  const canGoPrev = viewYear > today.getFullYear() || (viewYear === today.getFullYear() && viewMonth > today.getMonth());
+
+  const isSameDay = (d) => {
+    if (!selectedDate) return false;
+    return selectedDate.getDate() === d && selectedDate.getMonth() === viewMonth && selectedDate.getFullYear() === viewYear;
+  };
+
+  const isPast = (d) => {
+    const check = new Date(viewYear, viewMonth, d);
+    check.setHours(0, 0, 0, 0);
+    return check < today;
+  };
+
+  const isSunday = (d) => {
+    return new Date(viewYear, viewMonth, d).getDay() === 0;
+  };
+
+  const isToday = (d) => {
+    return d === today.getDate() && viewMonth === today.getMonth() && viewYear === today.getFullYear();
+  };
+
+  return (
+    <div>
+      <div style={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginBottom: "16px",
+      }}>
+        <button
+          onClick={() => {
+            if (canGoPrev) {
+              if (viewMonth === 0) { setViewMonth(11); setViewYear(viewYear - 1); }
+              else setViewMonth(viewMonth - 1);
+            }
+          }}
+          style={{
+            background: "none",
+            border: "none",
+            color: canGoPrev ? "#888" : "#333",
+            fontSize: "18px",
+            cursor: canGoPrev ? "pointer" : "default",
+            padding: "4px 8px",
+          }}
+        >←</button>
+        <span style={{
+          fontFamily: "'Clash Display', sans-serif",
+          fontSize: "16px",
+          fontWeight: 600,
+          color: "#f0ece4",
+        }}>{MONTHS_ES[viewMonth]} {viewYear}</span>
+        <button
+          onClick={() => {
+            if (viewMonth === 11) { setViewMonth(0); setViewYear(viewYear + 1); }
+            else setViewMonth(viewMonth + 1);
+          }}
+          style={{
+            background: "none",
+            border: "none",
+            color: "#888",
+            fontSize: "18px",
+            cursor: "pointer",
+            padding: "4px 8px",
+          }}
+        >→</button>
+      </div>
+
+      <div style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(7, 1fr)",
+        gap: "4px",
+        marginBottom: "8px",
+      }}>
+        {DAYS_ES.map(d => (
+          <div key={d} style={{
+            textAlign: "center",
+            fontFamily: "'Satoshi', sans-serif",
+            fontSize: "11px",
+            fontWeight: 600,
+            color: "#555",
+            padding: "6px 0",
+            textTransform: "uppercase",
+            letterSpacing: "1px",
+          }}>{d}</div>
+        ))}
+      </div>
+
+      <div style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(7, 1fr)",
+        gap: "4px",
+      }}>
+        {cells.map((d, i) => {
+          if (d === null) return <div key={`e${i}`} />;
+          const past = isPast(d);
+          const sunday = isSunday(d);
+          const disabled = past || sunday;
+          const selected = isSameDay(d);
+          const todayMark = isToday(d);
+
+          return (
+            <button
+              key={d}
+              disabled={disabled}
+              onClick={() => {
+                if (!disabled) onSelectDate(new Date(viewYear, viewMonth, d));
+              }}
+              style={{
+                width: "100%",
+                aspectRatio: "1",
+                borderRadius: "10px",
+                border: selected ? "2px solid #D4652B" : todayMark ? "1px solid #333" : "1px solid transparent",
+                background: selected ? "#D4652B22" : "transparent",
+                color: disabled ? "#333" : selected ? "#D4652B" : todayMark ? "#f0ece4" : "#aaa",
+                fontFamily: "'Satoshi', sans-serif",
+                fontSize: "14px",
+                fontWeight: selected || todayMark ? 700 : 400,
+                cursor: disabled ? "default" : "pointer",
+                transition: "all 0.2s ease",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >{d}</button>
+          );
+        })}
+      </div>
+
+      {selectedDate && (
+        <div style={{ marginTop: "20px" }}>
+          <div style={{
+            fontFamily: "'Satoshi', sans-serif",
+            fontSize: "12px",
+            fontWeight: 600,
+            color: "#666",
+            textTransform: "uppercase",
+            letterSpacing: "1.5px",
+            marginBottom: "10px",
+          }}>Elige hora</div>
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(3, 1fr)",
+            gap: "8px",
+          }}>
+            {TIME_SLOTS.map(t => (
+              <button
+                key={t}
+                onClick={() => onSelectTime(t)}
+                style={{
+                  padding: "10px",
+                  borderRadius: "8px",
+                  border: selectedTime === t ? "2px solid #D4652B" : "1px solid #222",
+                  background: selectedTime === t ? "#D4652B18" : "#111",
+                  color: selectedTime === t ? "#D4652B" : "#aaa",
+                  fontFamily: "'Satoshi', sans-serif",
+                  fontSize: "14px",
+                  fontWeight: selectedTime === t ? 700 : 400,
+                  cursor: "pointer",
+                  transition: "all 0.2s ease",
+                }}
+              >{t}</button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 function StarRating({ rating, size = 16 }) {
   return (
@@ -85,7 +280,6 @@ function WhatsAppButton({ variant = "primary", text = "Contactar por WhatsApp" }
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
-      fontSize: "16px",
     },
   };
 
@@ -129,7 +323,7 @@ function ServiceCard({ service, index, onSelect, isSelected }) {
         background: isSelected ? `linear-gradient(145deg, ${service.accent}18, ${service.accent}08)` : hovered ? "#1a1a1a" : "#111",
         border: `2px solid ${isSelected ? service.accent : hovered ? "#333" : "#1a1a1a"}`,
         borderRadius: "16px",
-        padding: "40px 32px",
+        padding: "36px 28px",
         cursor: "pointer",
         transition: "all 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
         transform: hovered ? "translateY(-8px)" : "translateY(0)",
@@ -141,9 +335,9 @@ function ServiceCard({ service, index, onSelect, isSelected }) {
     >
       <div style={{
         position: "absolute",
-        top: "-60px",
-        right: "-40px",
-        fontSize: "160px",
+        top: "-50px",
+        right: "-30px",
+        fontSize: "140px",
         opacity: hovered ? 0.06 : 0.03,
         transition: "opacity 0.4s ease",
         lineHeight: 1,
@@ -152,29 +346,29 @@ function ServiceCard({ service, index, onSelect, isSelected }) {
         {service.icon}
       </div>
 
-      <div style={{ fontSize: "48px", marginBottom: "20px" }}>{service.icon}</div>
+      <div style={{ fontSize: "44px", marginBottom: "16px" }}>{service.icon}</div>
       <h3 style={{
         fontFamily: "'Clash Display', sans-serif",
-        fontSize: "28px",
+        fontSize: "24px",
         fontWeight: 700,
         color: "#f0ece4",
-        marginBottom: "12px",
+        marginBottom: "10px",
       }}>{service.title}</h3>
       <p style={{
         fontFamily: "'Satoshi', sans-serif",
-        fontSize: "15px",
+        fontSize: "14px",
         color: "#888",
         lineHeight: 1.7,
-        marginBottom: "24px",
+        marginBottom: "20px",
       }}>{service.description}</p>
 
-      <div style={{ marginBottom: "28px" }}>
+      <div style={{ marginBottom: "24px" }}>
         {service.features.map((f, i) => (
           <div key={i} style={{
             fontFamily: "'Satoshi', sans-serif",
             fontSize: "13px",
             color: "#aaa",
-            padding: "6px 0",
+            padding: "5px 0",
             borderBottom: i < service.features.length - 1 ? "1px solid #1f1f1f" : "none",
             display: "flex",
             alignItems: "center",
@@ -193,10 +387,10 @@ function ServiceCard({ service, index, onSelect, isSelected }) {
       }}>
         <span style={{
           fontFamily: "'Clash Display', sans-serif",
-          fontSize: "18px",
+          fontSize: "15px",
           fontWeight: 600,
           color: service.accent,
-        }}>{service.price}</span>
+        }}>Presupuesto gratis</span>
         <span style={{
           fontFamily: "'Satoshi', sans-serif",
           fontSize: "13px",
@@ -211,35 +405,53 @@ function ServiceCard({ service, index, onSelect, isSelected }) {
 
 function BookingForm({ selectedServices, services }) {
   const [formData, setFormData] = useState({ name: "", email: "", phone: "", address: "", message: "" });
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [selectedTime, setSelectedTime] = useState(null);
   const [submitted, setSubmitted] = useState(false);
+  const [step, setStep] = useState(1);
+
+  const isStep1Valid = formData.name && formData.phone;
+  const isStep2Valid = selectedDate && selectedTime;
 
   const handleSubmit = () => {
-    if (formData.name && formData.email && formData.phone) {
-      setSubmitted(true);
-    }
+    if (isStep1Valid) setSubmitted(true);
+  };
+
+  const formatDate = (d) => {
+    if (!d) return "";
+    return `${d.getDate()} de ${MONTHS_ES[d.getMonth()]} ${d.getFullYear()}`;
   };
 
   if (submitted) {
     return (
       <div style={{
         textAlign: "center",
-        padding: "80px 40px",
+        padding: "60px 40px",
         animation: "fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1)",
       }}>
         <div style={{ fontSize: "64px", marginBottom: "24px" }}>✓</div>
         <h3 style={{
           fontFamily: "'Clash Display', sans-serif",
-          fontSize: "32px",
+          fontSize: "28px",
           fontWeight: 700,
           color: "#f0ece4",
           marginBottom: "12px",
         }}>Solicitud Recibida</h3>
+        {selectedDate && selectedTime && (
+          <p style={{
+            fontFamily: "'Satoshi', sans-serif",
+            fontSize: "16px",
+            color: "#D4652B",
+            fontWeight: 600,
+            marginBottom: "8px",
+          }}>Cita: {formatDate(selectedDate)} a las {selectedTime}h</p>
+        )}
         <p style={{
           fontFamily: "'Satoshi', sans-serif",
-          fontSize: "16px",
+          fontSize: "15px",
           color: "#888",
           marginBottom: "28px",
-        }}>Te contactaremos en menos de 2 horas para confirmar tu cita.</p>
+        }}>Te contactaremos en menos de 2 horas para confirmar.</p>
         <WhatsAppButton text="O escríbenos por WhatsApp" />
       </div>
     );
@@ -275,7 +487,7 @@ function BookingForm({ selectedServices, services }) {
   return (
     <div style={{ animation: "fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1)" }}>
       {selectedNames.length > 0 && (
-        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "32px" }}>
+        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "28px" }}>
           {selectedNames.map((name, i) => (
             <span key={i} style={{
               fontFamily: "'Satoshi', sans-serif",
@@ -291,68 +503,179 @@ function BookingForm({ selectedServices, services }) {
         </div>
       )}
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px", marginBottom: "20px" }}>
-        <div>
-          <label style={labelStyle}>Nombre completo *</label>
-          <input style={inputStyle} placeholder="Tu nombre" value={formData.name}
-            onChange={e => setFormData({ ...formData, name: e.target.value })}
-            onFocus={e => e.target.style.borderColor = "#D4652B"}
-            onBlur={e => e.target.style.borderColor = "#222"} />
-        </div>
-        <div>
-          <label style={labelStyle}>Email *</label>
-          <input style={inputStyle} placeholder="correo@ejemplo.com" value={formData.email}
-            onChange={e => setFormData({ ...formData, email: e.target.value })}
-            onFocus={e => e.target.style.borderColor = "#D4652B"}
-            onBlur={e => e.target.style.borderColor = "#222"} />
-        </div>
+      <div style={{
+        display: "flex",
+        gap: "4px",
+        marginBottom: "28px",
+        background: "#111",
+        borderRadius: "10px",
+        padding: "4px",
+        border: "1px solid #1a1a1a",
+      }}>
+        {[
+          { n: 1, label: "Tus datos" },
+          { n: 2, label: "Fecha y hora" },
+        ].map(s => (
+          <button key={s.n} onClick={() => setStep(s.n)} style={{
+            flex: 1,
+            padding: "12px",
+            borderRadius: "8px",
+            border: "none",
+            background: step === s.n ? "#D4652B" : "transparent",
+            color: step === s.n ? "#fff" : "#666",
+            fontFamily: "'Satoshi', sans-serif",
+            fontSize: "13px",
+            fontWeight: 600,
+            cursor: "pointer",
+            transition: "all 0.3s ease",
+          }}>{s.n}. {s.label}</button>
+        ))}
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px", marginBottom: "20px" }}>
+      {step === 1 && (
         <div>
-          <label style={labelStyle}>Teléfono *</label>
-          <input style={inputStyle} placeholder="+34 600 000 000" value={formData.phone}
-            onChange={e => setFormData({ ...formData, phone: e.target.value })}
-            onFocus={e => e.target.style.borderColor = "#D4652B"}
-            onBlur={e => e.target.style.borderColor = "#222"} />
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px", marginBottom: "20px" }}>
+            <div>
+              <label style={labelStyle}>Nombre completo *</label>
+              <input style={inputStyle} placeholder="Tu nombre" value={formData.name}
+                onChange={e => setFormData({ ...formData, name: e.target.value })}
+                onFocus={e => e.target.style.borderColor = "#D4652B"}
+                onBlur={e => e.target.style.borderColor = "#222"} />
+            </div>
+            <div>
+              <label style={labelStyle}>Teléfono *</label>
+              <input style={inputStyle} placeholder="+34 600 000 000" value={formData.phone}
+                onChange={e => setFormData({ ...formData, phone: e.target.value })}
+                onFocus={e => e.target.style.borderColor = "#D4652B"}
+                onBlur={e => e.target.style.borderColor = "#222"} />
+            </div>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px", marginBottom: "20px" }}>
+            <div>
+              <label style={labelStyle}>Email</label>
+              <input style={inputStyle} placeholder="correo@ejemplo.com" value={formData.email}
+                onChange={e => setFormData({ ...formData, email: e.target.value })}
+                onFocus={e => e.target.style.borderColor = "#D4652B"}
+                onBlur={e => e.target.style.borderColor = "#222"} />
+            </div>
+            <div>
+              <label style={labelStyle}>Dirección</label>
+              <input style={inputStyle} placeholder="Tu dirección" value={formData.address}
+                onChange={e => setFormData({ ...formData, address: e.target.value })}
+                onFocus={e => e.target.style.borderColor = "#D4652B"}
+                onBlur={e => e.target.style.borderColor = "#222"} />
+            </div>
+          </div>
+
+          <div style={{ marginBottom: "24px" }}>
+            <label style={labelStyle}>Describe el problema</label>
+            <textarea style={{ ...inputStyle, minHeight: "90px", resize: "vertical" }}
+              placeholder="Cuéntanos qué necesitas reparar o reformar..."
+              value={formData.message}
+              onChange={e => setFormData({ ...formData, message: e.target.value })}
+              onFocus={e => e.target.style.borderColor = "#D4652B"}
+              onBlur={e => e.target.style.borderColor = "#222"} />
+          </div>
+
+          <button
+            onClick={() => { if (isStep1Valid) setStep(2); }}
+            style={{
+              width: "100%",
+              padding: "16px",
+              background: isStep1Valid ? "linear-gradient(135deg, #D4652B, #e07a40)" : "#222",
+              color: isStep1Valid ? "#fff" : "#555",
+              border: "none",
+              borderRadius: "12px",
+              fontFamily: "'Clash Display', sans-serif",
+              fontSize: "16px",
+              fontWeight: 700,
+              cursor: isStep1Valid ? "pointer" : "default",
+              transition: "all 0.3s ease",
+            }}
+          >Siguiente: Elegir fecha →</button>
         </div>
+      )}
+
+      {step === 2 && (
         <div>
-          <label style={labelStyle}>Dirección</label>
-          <input style={inputStyle} placeholder="Tu dirección" value={formData.address}
-            onChange={e => setFormData({ ...formData, address: e.target.value })}
-            onFocus={e => e.target.style.borderColor = "#D4652B"}
-            onBlur={e => e.target.style.borderColor = "#222"} />
+          <div style={{
+            background: "#0c0c0c",
+            border: "1px solid #1a1a1a",
+            borderRadius: "14px",
+            padding: "24px",
+            marginBottom: "24px",
+          }}>
+            <CalendarPicker
+              selectedDate={selectedDate}
+              onSelectDate={setSelectedDate}
+              selectedTime={selectedTime}
+              onSelectTime={setSelectedTime}
+            />
+          </div>
+
+          {selectedDate && selectedTime && (
+            <div style={{
+              background: "#D4652B10",
+              border: "1px solid #D4652B33",
+              borderRadius: "12px",
+              padding: "16px 20px",
+              marginBottom: "20px",
+              display: "flex",
+              alignItems: "center",
+              gap: "12px",
+            }}>
+              <span style={{ fontSize: "20px" }}>📅</span>
+              <div>
+                <div style={{
+                  fontFamily: "'Clash Display', sans-serif",
+                  fontSize: "15px",
+                  fontWeight: 600,
+                  color: "#D4652B",
+                }}>{formatDate(selectedDate)}</div>
+                <div style={{
+                  fontFamily: "'Satoshi', sans-serif",
+                  fontSize: "13px",
+                  color: "#888",
+                }}>a las {selectedTime}h · {formData.name}</div>
+              </div>
+            </div>
+          )}
+
+          <div style={{ display: "flex", gap: "12px" }}>
+            <button
+              onClick={() => setStep(1)}
+              style={{
+                padding: "16px 24px",
+                background: "transparent",
+                color: "#888",
+                border: "1px solid #222",
+                borderRadius: "12px",
+                fontFamily: "'Satoshi', sans-serif",
+                fontSize: "15px",
+                fontWeight: 500,
+                cursor: "pointer",
+              }}
+            >← Atrás</button>
+            <button
+              onClick={handleSubmit}
+              style={{
+                flex: 1,
+                padding: "16px",
+                background: isStep1Valid ? "linear-gradient(135deg, #D4652B, #e07a40)" : "#222",
+                color: isStep1Valid ? "#fff" : "#555",
+                border: "none",
+                borderRadius: "12px",
+                fontFamily: "'Clash Display', sans-serif",
+                fontSize: "16px",
+                fontWeight: 700,
+                cursor: isStep1Valid ? "pointer" : "default",
+                transition: "all 0.3s ease",
+              }}
+            >{selectedDate && selectedTime ? "Confirmar Cita" : "Solicitar sin cita"}</button>
+          </div>
         </div>
-      </div>
-
-      <div style={{ marginBottom: "28px" }}>
-        <label style={labelStyle}>Describe el problema</label>
-        <textarea style={{ ...inputStyle, minHeight: "100px", resize: "vertical" }}
-          placeholder="Cuéntanos qué necesitas reparar o reformar..."
-          value={formData.message}
-          onChange={e => setFormData({ ...formData, message: e.target.value })}
-          onFocus={e => e.target.style.borderColor = "#D4652B"}
-          onBlur={e => e.target.style.borderColor = "#222"} />
-      </div>
-
-      <div style={{ display: "flex", gap: "16px" }}>
-        <button onClick={handleSubmit} style={{
-          flex: 1,
-          padding: "18px",
-          background: formData.name && formData.email && formData.phone
-            ? "linear-gradient(135deg, #D4652B, #e07a40)" : "#222",
-          color: formData.name && formData.email && formData.phone ? "#fff" : "#555",
-          border: "none",
-          borderRadius: "12px",
-          fontFamily: "'Clash Display', sans-serif",
-          fontSize: "16px",
-          fontWeight: 700,
-          cursor: formData.name && formData.email && formData.phone ? "pointer" : "default",
-          transition: "all 0.3s ease",
-        }}>
-          Solicitar Servicio
-        </button>
-      </div>
+      )}
 
       <div style={{
         display: "flex",
@@ -507,7 +830,7 @@ export default function LandingPage() {
             fontSize: "14px",
             fontWeight: 600,
             cursor: "pointer",
-          }}>Pedir Presupuesto</button>
+          }}>Pedir Cita</button>
         </div>
       </nav>
 
@@ -598,11 +921,11 @@ export default function LandingPage() {
             fontSize: "18px",
             color: "#777",
             lineHeight: 1.8,
-            maxWidth: "560px",
+            maxWidth: "580px",
             margin: "0 auto 48px",
             animation: "fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s backwards",
           }}>
-            Reformas, fontanería y mantenimiento de ascensores en L'Hospitalet de Llobregat.
+            Reformas, fontanería, electricidad y mantenimiento del hogar en L'Hospitalet de Llobregat.
             Una llamada. Técnicos expertos. Satisfacción garantizada.
           </p>
 
@@ -628,7 +951,7 @@ export default function LandingPage() {
             }}
             onMouseEnter={e => { e.target.style.transform = "translateY(-2px)"; e.target.style.boxShadow = "0 12px 40px #D4652B44"; }}
             onMouseLeave={e => { e.target.style.transform = "translateY(0)"; e.target.style.boxShadow = "0 8px 32px #D4652B33"; }}
-            >Pedir Presupuesto Gratis →</button>
+            >Pedir Cita Gratis →</button>
 
             <WhatsAppButton />
 
@@ -762,8 +1085,8 @@ export default function LandingPage() {
 
         <div style={{
           display: "grid",
-          gridTemplateColumns: "repeat(3, 1fr)",
-          gap: "24px",
+          gridTemplateColumns: "repeat(4, 1fr)",
+          gap: "20px",
         }}>
           {SERVICES.map((service, i) => (
             <ServiceCard
@@ -807,8 +1130,8 @@ export default function LandingPage() {
         }}>
           {[
             { step: "01", title: "Elige Servicios", desc: "Selecciona lo que necesitas de nuestras tarjetas de servicio.", icon: "☑️" },
-            { step: "02", title: "Cuéntanos", desc: "Rellena el formulario o escríbenos por WhatsApp con los detalles.", icon: "📝" },
-            { step: "03", title: "Te Llamamos", desc: "Confirmamos en menos de 2 horas y programamos la visita.", icon: "📞" },
+            { step: "02", title: "Elige Fecha", desc: "Escoge el día y hora que mejor te venga en nuestro calendario.", icon: "📅" },
+            { step: "03", title: "Confirmamos", desc: "Te llamamos en menos de 2 horas para confirmar tu cita.", icon: "📞" },
             { step: "04", title: "Problema Resuelto", desc: "Nuestros técnicos certificados lo solucionan — garantizado.", icon: "✅" },
           ].map((item, i) => (
             <div key={i} style={{
@@ -869,24 +1192,24 @@ export default function LandingPage() {
           }}>Lo Que Dicen Nuestros Clientes</h2>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "24px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "20px" }}>
           {TESTIMONIALS.map((t, i) => (
             <div key={i} style={{
               background: "#111",
               border: "1px solid #1a1a1a",
               borderRadius: "16px",
-              padding: "36px 28px",
+              padding: "32px 24px",
               animation: `fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) ${i * 100}ms backwards`,
             }}>
-              <div style={{ marginBottom: "16px" }}>
+              <div style={{ marginBottom: "14px" }}>
                 <StarRating rating={t.rating} />
               </div>
               <p style={{
                 fontFamily: "'Satoshi', sans-serif",
-                fontSize: "15px",
+                fontSize: "14px",
                 color: "#aaa",
                 lineHeight: 1.8,
-                marginBottom: "24px",
+                marginBottom: "20px",
                 fontStyle: "italic",
               }}>"{t.text}"</p>
               <div style={{
@@ -913,7 +1236,7 @@ export default function LandingPage() {
             color: "#D4652B",
             letterSpacing: "3px",
             textTransform: "uppercase",
-          }}>Contacto</span>
+          }}>Reservar Cita</span>
           <h2 style={{
             fontFamily: "'Clash Display', sans-serif",
             fontSize: "clamp(32px, 4vw, 48px)",
@@ -921,15 +1244,15 @@ export default function LandingPage() {
             color: "#f0ece4",
             marginTop: "16px",
             marginBottom: "12px",
-          }}>Solicita tu Presupuesto</h2>
+          }}>Pide tu Cita</h2>
           <p style={{
             fontFamily: "'Satoshi', sans-serif",
             fontSize: "15px",
             color: "#666",
           }}>
             {selectedServices.length === 0
-              ? "Selecciona servicios arriba y rellena tus datos, o escríbenos directamente por WhatsApp."
-              : `${selectedServices.length} servicio${selectedServices.length > 1 ? "s" : ""} seleccionado${selectedServices.length > 1 ? "s" : ""}. Completa el formulario o contacta por WhatsApp.`
+              ? "Selecciona servicios arriba, rellena tus datos y elige fecha y hora."
+              : `${selectedServices.length} servicio${selectedServices.length > 1 ? "s" : ""} seleccionado${selectedServices.length > 1 ? "s" : ""}. Rellena tus datos y elige cuándo te viene bien.`
             }
           </p>
         </div>
@@ -938,7 +1261,7 @@ export default function LandingPage() {
           background: "#0f0f0f",
           border: "1px solid #1a1a1a",
           borderRadius: "20px",
-          padding: "40px",
+          padding: "36px",
         }}>
           <BookingForm selectedServices={selectedServices} services={SERVICES} />
         </div>
