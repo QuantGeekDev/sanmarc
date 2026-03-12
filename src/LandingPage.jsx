@@ -403,7 +403,7 @@ function ServiceCard({ service, index, onSelect, isSelected }) {
   );
 }
 
-function BookingForm({ selectedServices, services }) {
+function BookingForm({ selectedServices, services, isMobile }) {
   const [formData, setFormData] = useState({ name: "", email: "", phone: "", address: "", message: "" });
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedTime, setSelectedTime] = useState(null);
@@ -411,8 +411,6 @@ function BookingForm({ selectedServices, services }) {
   const [step, setStep] = useState(1);
 
   const isStep1Valid = formData.name && formData.phone;
-  const isStep2Valid = selectedDate && selectedTime;
-
   const handleSubmit = () => {
     if (isStep1Valid) setSubmitted(true);
   };
@@ -534,7 +532,7 @@ function BookingForm({ selectedServices, services }) {
 
       {step === 1 && (
         <div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px", marginBottom: "20px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "20px", marginBottom: "20px" }}>
             <div>
               <label style={labelStyle}>Nombre completo *</label>
               <input style={inputStyle} placeholder="Tu nombre" value={formData.name}
@@ -551,7 +549,7 @@ function BookingForm({ selectedServices, services }) {
             </div>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px", marginBottom: "20px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "20px", marginBottom: "20px" }}>
             <div>
               <label style={labelStyle}>Email</label>
               <input style={inputStyle} placeholder="correo@ejemplo.com" value={formData.email}
@@ -695,10 +693,24 @@ function BookingForm({ selectedServices, services }) {
   );
 }
 
+function useWindowWidth() {
+  const [width, setWidth] = useState(typeof window !== "undefined" ? window.innerWidth : 1200);
+  useEffect(() => {
+    const onResize = () => setWidth(window.innerWidth);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+  return width;
+}
+
 export default function LandingPage() {
   const [selectedServices, setSelectedServices] = useState([]);
   const [scrollY, setScrollY] = useState(0);
+  const [menuOpen, setMenuOpen] = useState(false);
   const bookingRef = useRef(null);
+  const width = useWindowWidth();
+  const isMobile = width < 768;
+  const isTablet = width >= 768 && width < 1024;
 
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
@@ -755,84 +767,148 @@ export default function LandingPage() {
         left: 0,
         right: 0,
         zIndex: 100,
-        padding: "20px 48px",
+        padding: isMobile ? "14px 20px" : "20px 48px",
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
-        background: scrollY > 50 ? "rgba(10,10,10,0.92)" : "transparent",
-        backdropFilter: scrollY > 50 ? "blur(20px)" : "none",
+        background: scrollY > 50 || menuOpen ? "rgba(10,10,10,0.92)" : "transparent",
+        backdropFilter: scrollY > 50 || menuOpen ? "blur(20px)" : "none",
         transition: "all 0.4s ease",
         borderBottom: scrollY > 50 ? "1px solid #1a1a1a" : "1px solid transparent",
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
           <span style={{
-            width: "38px",
-            height: "38px",
+            width: isMobile ? "32px" : "38px",
+            height: isMobile ? "32px" : "38px",
             background: "linear-gradient(135deg, #D4652B, #e8924c)",
             borderRadius: "10px",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            fontSize: "18px",
+            fontSize: isMobile ? "14px" : "18px",
           }}>⚡</span>
           <div>
             <div style={{
               fontFamily: "'Clash Display', sans-serif",
-              fontSize: "20px",
+              fontSize: isMobile ? "17px" : "20px",
               fontWeight: 700,
               lineHeight: 1.1,
             }}>SANCMART</div>
-            <div style={{
+            {!isMobile && <div style={{
               fontFamily: "'Satoshi', sans-serif",
               fontSize: "10px",
               color: "#666",
               letterSpacing: "1.5px",
               textTransform: "uppercase",
-            }}>Asistencia del Hogar y Reformas</div>
+            }}>Asistencia del Hogar y Reformas</div>}
           </div>
         </div>
-        <div style={{ display: "flex", gap: "32px", alignItems: "center" }}>
-          {["Servicios", "Proceso", "Opiniones"].map((item, i) => (
-            <a key={i} href={`#${item.toLowerCase()}`} style={{
+
+        {isMobile ? (
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            style={{
+              background: "none",
+              border: "none",
+              color: "#f0ece4",
+              fontSize: "24px",
+              cursor: "pointer",
+              padding: "4px",
+            }}
+          >{menuOpen ? "✕" : "☰"}</button>
+        ) : (
+          <div style={{ display: "flex", gap: "32px", alignItems: "center" }}>
+            {["Servicios", "Proceso", "Opiniones"].map((item, i) => (
+              <a key={i} href={`#${item.toLowerCase()}`} style={{
+                fontFamily: "'Satoshi', sans-serif",
+                fontSize: "14px",
+                fontWeight: 500,
+                color: "#888",
+                textDecoration: "none",
+                transition: "color 0.3s ease",
+                cursor: "pointer",
+              }}
+              onMouseEnter={e => e.target.style.color = "#f0ece4"}
+              onMouseLeave={e => e.target.style.color = "#888"}
+              >{item}</a>
+            ))}
+            <a href="tel:+34642822616" style={{
               fontFamily: "'Satoshi', sans-serif",
               fontSize: "14px",
-              fontWeight: 500,
-              color: "#888",
+              fontWeight: 600,
+              color: "#f0ece4",
               textDecoration: "none",
-              transition: "color 0.3s ease",
-              cursor: "pointer",
+              padding: "10px 20px",
+              border: "1px solid #333",
+              borderRadius: "8px",
+              transition: "border-color 0.3s",
             }}
-            onMouseEnter={e => e.target.style.color = "#f0ece4"}
-            onMouseLeave={e => e.target.style.color = "#888"}
-            >{item}</a>
+            onMouseEnter={e => e.target.style.borderColor = "#666"}
+            onMouseLeave={e => e.target.style.borderColor = "#333"}
+            >642 82 26 16</a>
+            <button onClick={scrollToBooking} style={{
+              padding: "10px 24px",
+              background: "#D4652B",
+              color: "#fff",
+              border: "none",
+              borderRadius: "8px",
+              fontFamily: "'Satoshi', sans-serif",
+              fontSize: "14px",
+              fontWeight: 600,
+              cursor: "pointer",
+            }}>Pedir Cita</button>
+          </div>
+        )}
+      </nav>
+
+      {isMobile && menuOpen && (
+        <div style={{
+          position: "fixed",
+          top: "60px",
+          left: 0,
+          right: 0,
+          zIndex: 99,
+          background: "rgba(10,10,10,0.97)",
+          backdropFilter: "blur(20px)",
+          padding: "20px",
+          display: "flex",
+          flexDirection: "column",
+          gap: "16px",
+          borderBottom: "1px solid #1a1a1a",
+          animation: "fadeUp 0.3s ease",
+        }}>
+          {["Servicios", "Proceso", "Opiniones"].map((item, i) => (
+            <a key={i} href={`#${item.toLowerCase()}`} onClick={() => setMenuOpen(false)} style={{
+              fontFamily: "'Satoshi', sans-serif",
+              fontSize: "16px",
+              fontWeight: 500,
+              color: "#ccc",
+              textDecoration: "none",
+              padding: "8px 0",
+              borderBottom: "1px solid #1a1a1a",
+            }}>{item}</a>
           ))}
           <a href="tel:+34642822616" style={{
             fontFamily: "'Satoshi', sans-serif",
-            fontSize: "14px",
+            fontSize: "16px",
             fontWeight: 600,
             color: "#f0ece4",
             textDecoration: "none",
-            padding: "10px 20px",
-            border: "1px solid #333",
-            borderRadius: "8px",
-            transition: "border-color 0.3s",
-          }}
-          onMouseEnter={e => e.target.style.borderColor = "#666"}
-          onMouseLeave={e => e.target.style.borderColor = "#333"}
-          >642 82 26 16</a>
-          <button onClick={scrollToBooking} style={{
-            padding: "10px 24px",
+            padding: "8px 0",
+          }}>📞 642 82 26 16</a>
+          <button onClick={() => { scrollToBooking(); setMenuOpen(false); }} style={{
+            padding: "14px",
             background: "#D4652B",
             color: "#fff",
             border: "none",
-            borderRadius: "8px",
+            borderRadius: "10px",
             fontFamily: "'Satoshi', sans-serif",
-            fontSize: "14px",
+            fontSize: "16px",
             fontWeight: 600,
             cursor: "pointer",
           }}>Pedir Cita</button>
         </div>
-      </nav>
+      )}
 
       <section style={{
         minHeight: "100vh",
@@ -840,7 +916,7 @@ export default function LandingPage() {
         alignItems: "center",
         justifyContent: "center",
         position: "relative",
-        padding: "120px 48px 80px",
+        padding: isMobile ? "100px 20px 60px" : "120px 48px 80px",
         overflow: "hidden",
       }}>
         <div style={{
@@ -931,13 +1007,15 @@ export default function LandingPage() {
 
           <div style={{
             display: "flex",
-            gap: "16px",
+            flexDirection: isMobile ? "column" : "row",
+            gap: isMobile ? "12px" : "16px",
             justifyContent: "center",
+            alignItems: isMobile ? "stretch" : "center",
             flexWrap: "wrap",
             animation: "fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s backwards",
           }}>
             <button onClick={scrollToBooking} style={{
-              padding: "18px 40px",
+              padding: isMobile ? "16px 24px" : "18px 40px",
               background: "linear-gradient(135deg, #D4652B, #e07a40)",
               color: "#fff",
               border: "none",
@@ -979,8 +1057,8 @@ export default function LandingPage() {
           <div style={{
             display: "flex",
             justifyContent: "center",
-            gap: "48px",
-            marginTop: "72px",
+            gap: isMobile ? "24px" : "48px",
+            marginTop: isMobile ? "48px" : "72px",
             animation: "fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.5s backwards",
           }}>
             {[
@@ -1010,20 +1088,19 @@ export default function LandingPage() {
       </section>
 
       <section style={{
-        padding: "60px 48px",
+        padding: isMobile ? "40px 20px" : "60px 48px",
         maxWidth: "1200px",
         margin: "0 auto",
       }}>
         <div style={{
           background: "#111",
           border: "1px solid #1a1a1a",
-          borderRadius: "20px",
-          padding: "40px 48px",
-          display: "flex",
-          justifyContent: "space-between",
+          borderRadius: isMobile ? "14px" : "20px",
+          padding: isMobile ? "24px 16px" : "40px 48px",
+          display: "grid",
+          gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(5, 1fr)",
           alignItems: "center",
-          flexWrap: "wrap",
-          gap: "24px",
+          gap: isMobile ? "20px" : "24px",
         }}>
           {[
             { icon: "📍", label: "Ubicación", value: "L'Hospitalet de Llobregat" },
@@ -1032,7 +1109,7 @@ export default function LandingPage() {
             { icon: "🚚", label: "Servicio", value: "A domicilio" },
             { icon: "⭐", label: "Google", value: "4,2 ★ (12 reseñas)" },
           ].map((item, i) => (
-            <div key={i} style={{ textAlign: "center", flex: "1 1 150px" }}>
+            <div key={i} style={{ textAlign: "center" }}>
               <div style={{ fontSize: "24px", marginBottom: "8px" }}>{item.icon}</div>
               <div style={{
                 fontFamily: "'Satoshi', sans-serif",
@@ -1055,7 +1132,7 @@ export default function LandingPage() {
       </section>
 
       <section id="servicios" style={{
-        padding: "100px 48px",
+        padding: isMobile ? "60px 20px" : "100px 48px",
         maxWidth: "1200px",
         margin: "0 auto",
       }}>
@@ -1085,7 +1162,7 @@ export default function LandingPage() {
 
         <div style={{
           display: "grid",
-          gridTemplateColumns: "repeat(4, 1fr)",
+          gridTemplateColumns: isMobile ? "1fr" : isTablet ? "repeat(2, 1fr)" : "repeat(4, 1fr)",
           gap: "20px",
         }}>
           {SERVICES.map((service, i) => (
@@ -1101,7 +1178,7 @@ export default function LandingPage() {
       </section>
 
       <section id="proceso" style={{
-        padding: "100px 48px",
+        padding: isMobile ? "60px 20px" : "100px 48px",
         maxWidth: "1200px",
         margin: "0 auto",
       }}>
@@ -1125,8 +1202,8 @@ export default function LandingPage() {
 
         <div style={{
           display: "grid",
-          gridTemplateColumns: "repeat(4, 1fr)",
-          gap: "32px",
+          gridTemplateColumns: isMobile ? "1fr" : isTablet ? "repeat(2, 1fr)" : "repeat(4, 1fr)",
+          gap: isMobile ? "24px" : "32px",
         }}>
           {[
             { step: "01", title: "Elige Servicios", desc: "Selecciona lo que necesitas de nuestras tarjetas de servicio.", icon: "☑️" },
@@ -1170,7 +1247,7 @@ export default function LandingPage() {
       </section>
 
       <section id="opiniones" style={{
-        padding: "100px 48px",
+        padding: isMobile ? "60px 20px" : "100px 48px",
         maxWidth: "1200px",
         margin: "0 auto",
       }}>
@@ -1192,7 +1269,7 @@ export default function LandingPage() {
           }}>Lo Que Dicen Nuestros Clientes</h2>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "20px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : isTablet ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: "20px" }}>
           {TESTIMONIALS.map((t, i) => (
             <div key={i} style={{
               background: "#111",
@@ -1224,7 +1301,7 @@ export default function LandingPage() {
       </section>
 
       <section ref={bookingRef} id="presupuesto" style={{
-        padding: "100px 48px",
+        padding: isMobile ? "60px 20px" : "100px 48px",
         maxWidth: "720px",
         margin: "0 auto",
       }}>
@@ -1260,23 +1337,24 @@ export default function LandingPage() {
         <div style={{
           background: "#0f0f0f",
           border: "1px solid #1a1a1a",
-          borderRadius: "20px",
-          padding: "36px",
+          borderRadius: isMobile ? "14px" : "20px",
+          padding: isMobile ? "20px" : "36px",
         }}>
-          <BookingForm selectedServices={selectedServices} services={SERVICES} />
+          <BookingForm selectedServices={selectedServices} services={SERVICES} isMobile={isMobile} />
         </div>
       </section>
 
       <footer style={{
-        padding: "48px",
+        padding: isMobile ? "32px 20px" : "48px",
         borderTop: "1px solid #141414",
         maxWidth: "1200px",
         margin: "0 auto",
       }}>
         <div style={{
           display: "flex",
+          flexDirection: isMobile ? "column" : "row",
           justifyContent: "space-between",
-          alignItems: "center",
+          alignItems: isMobile ? "flex-start" : "center",
           flexWrap: "wrap",
           gap: "20px",
         }}>
